@@ -19,7 +19,7 @@ class TabuSearch():
     mngi: número máximo de iteraciones globales después de encontrar la mejor solución
     discount_func: función de descuentos (función)
     """
-    def __init__(self, s, A_0, X_max, J_max, A, C, W, W_T, q, mnli, mngi,discount_func=lambda x: 1):
+    def __init__(self, s, A_0, X_max, J_max, A, C, W, W_T, q, mnli, mngi,discount_func=lambda c, x: 1):
         self.s = s
         self.A_0 = A_0
         self.X_max = X_max
@@ -125,7 +125,7 @@ class TabuSearch():
                     for k, _ in enumerate(self.W_T)
                 ]) )
         def cost():            
-            return sum(self.discount_func(solution[c])*solution[c] * self.C[c][j-1] for c, j in enumerate(solution[self.s:]))
+            return sum(self.discount_func(c, solution[c])*solution[c] * self.C[c][j-1] for c, j in enumerate(solution[self.s:]))
         
         return cost() + self.q*max(0, self.A_0 - availability())
     

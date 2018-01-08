@@ -8,7 +8,7 @@ def ij_performance(version,component):
 #    return sorted(k_lists,key=lambda k:m_performance(solution,k)}
 
 def delta_summ(k_interval,k_lists):
-    m_sort = lambda s,k: sorted(k_lists,key=lambda k:m_performance(k)}
+    m_sort = lambda s: sorted(s,key=lambda k:m_performance(k)}
     return self.W_T[k_interval][1]*sum(delta(m) for m in range(len(m_sort(k_lists)) if m_performance(m)>=W_T[k_interval][0])
 
 def delta(m):

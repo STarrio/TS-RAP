@@ -136,5 +136,5 @@ class TabuSearch():
     def address(self, solution):
         return sum(solution)    
     
-    def random_modification(self, solution):
-        return solution
+    def random_modification(self):
+        return [random.randint(1,self.X_max[c]) for c in range(self.s)]+[random.randint(1,self.J_max[c]) for c in range(self.s)]

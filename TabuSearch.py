@@ -1,7 +1,6 @@
 import random
 import numpy as np
 from scipy.stats import binom
-
 class TabuSearch():
     """
     TabuSearch es la clase que engloba el código necesario para la resolución del problema
@@ -38,17 +37,17 @@ class TabuSearch():
         s0 = self.generate_s0()
         s_best = s0
         s_cand = s0
-        while stop_cond:
-            stop_cond-=1
+        while stop_cond > 0:            
             s_cand = self.random_modification(s_cand)
             if(s_cand == []):
                 break            
             s_sub_cand = self.ts_sub(s_cand)
             if(self.score(s_sub_cand)<self.score(s_best)):
                 s_best=s_sub_cand
-                #print(s_best,self.address(s_best), self.score(s_best))
+                print(s_best,self.address(s_best), self.score(s_best))
                 stop_cond = self.mngi 
-            
+            else:
+                stop_cond -= self.mnli
         return s_best, self.score(s_best)
     
     def ts_sub(self, s0):
@@ -58,16 +57,19 @@ class TabuSearch():
         stop_cond = self.mnli
         tabu_list = []
         tabu_list.append(s0)
+        s_cand = s0
         while stop_cond:
             stop_cond-=1  
-            s_neighbors = self.neighborhood(s0, tabu_list)
+            s_neighbors = self.neighborhood(s_cand, tabu_list)
             if(len(s_neighbors) == 0):
                 continue
             s_cand = s_neighbors.pop()
-            s_cand_score = self.score(s_cand)
+            s_cand_score = self.score(s_cand)            
             for neighbor in s_neighbors:
-                if (not neighbor in tabu_list and self.score(neighbor)<s_cand_score):
+                neighbor_score = self.score(neighbor)
+                if (not neighbor in tabu_list and neighbor_score<s_cand_score):
                     s_cand = neighbor
+                    s_cand_score = neighbor_score
             if(s_cand_score<s_best_score):
                 s_best=s_cand
                 s_best_score = s_cand_score
@@ -87,7 +89,6 @@ class TabuSearch():
             entre 1 y X_max/J_max) y comprueba si no se encuentra ya en la lista tabu'''
             return (n[i1] in range(1, (self.X_max + self.J_max)[i1]+1) and
                n[i2] in range(1, (self.X_max + self.J_max)[i2]+1) and n not in tabu_list)
-
         def add_subtract_one_at_indexes(l,i1,i2):
             ''' Dados dos índices (i1,i2), se aplican las modificaciones (+1,-1) y (-1,+1) en los elementos
              correspondientes a las posiciones de dichos índices en la solución dada. Además, se checkea si
@@ -96,7 +97,6 @@ class TabuSearch():
             n1[i1],n1[i2] = n1[i1]+1,n1[i2]-1
             n2[i1],n2[i2] = n2[i1]-1,n2[i2]+1            
             return [ n for n in [n1, n2] if is_valid_neighbor(n, i1, i2)]
-
         return [ n for i1 in range(len(solution)-1) 
                      for i2 in range(i1+1, len(solution)) 
                         for n in add_subtract_one_at_indexes(solution,i1,i2)]
@@ -113,7 +113,6 @@ class TabuSearch():
             else:
                 return next(( 1 - binom.pmf(k-1, x, a) for k in range(2, x+1)
                               if (k-1)*w_c < w_k <= k*w_c), 0)
-
         def delta_summ(k, w_k):
             return np.prod([ alpha(c, w_k) for c in range(self.s)])
         
@@ -136,7 +135,7 @@ class TabuSearch():
     def address(self, solution):
         return sum(solution)    
     
-    def random_modification(self,solution):
+    def random_modification3(self,solution):
         def is_valid_swap(n, i1, i2):
             return (n[i1] in range(1, (self.X_max + self.J_max)[i2]+1)) and (n[i2] in range(1, (self.X_max + self.J_max)[i1]+1)) 
                 
@@ -175,3 +174,6 @@ class TabuSearch():
             if(is_valid(s_n,i_n)):
                 return s_n
         return []
+        
+    def random_modification(self, solution):
+        return [ random.randint(1, (self.X_max+self.J_max)[c]) for c in range(self.s*2) ]

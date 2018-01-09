@@ -37,17 +37,19 @@ class TabuSearch():
         stop_cond = self.mngi
         s0 = self.generate_s0()
         s_best = s0
+        s_cand = s0
         while stop_cond:
             stop_cond-=1
-            s_cand = self.random_modification(s_best)
-            print(s_cand)
+            s_cand = self.random_modification(s_cand)
+            if(s_cand == []):
+                break            
             s_sub_cand = self.ts_sub(s_cand)
             if(self.score(s_sub_cand)<self.score(s_best)):
                 s_best=s_sub_cand
-                print(s_best,self.address(s_best))
+                #print(s_best,self.address(s_best), self.score(s_best))
                 stop_cond = self.mngi 
             
-        return s_best
+        return s_best, self.score(s_best)
     
     def ts_sub(self, s0):
         s_best = s0
@@ -135,6 +137,31 @@ class TabuSearch():
         return sum(solution)    
     
     def random_modification(self,solution):
+        def is_valid_swap(n, i1, i2):
+            return (n[i1] in range(1, (self.X_max + self.J_max)[i2]+1)) and (n[i2] in range(1, (self.X_max + self.J_max)[i1]+1)) 
+                
+        def is_valid(n, i):
+            return (n[i] in range(1, (self.X_max + self.J_max)[i]+1))
+        
+        if self.address(solution) == self.address(self.X_max+self.J_max)-1:
+            return self.random_modification2(solution)
+        
+        I_n = list(range(2*(self.s)))
+        I_n2 = list(range(2*(self.s)))
+        while len(I_n)>0:
+            s_n = solution.copy()
+            i_n = random.choice(I_n) 
+            I_n.remove(i_n)
+            s_n[i_n] += 1
+            if(is_valid(s_n,i_n)):
+                swap = next( ( i2 for i2 in I_n2 if i_n != i2 and is_valid_swap(s_n, i_n, i2)), None )
+                if swap != None:
+                    s_n[i_n], s_n[swap] = s_n[swap], s_n[i_n]
+                    return s_n
+        return []
+            
+    
+    def random_modification2(self,solution):
         def is_valid(n, i):
             return (n[i] in range(1, (self.X_max + self.J_max)[i]+1))
         
@@ -146,5 +173,5 @@ class TabuSearch():
             s_n[i_n]+=1
             
             if(is_valid(s_n,i_n)):
-               return s_n
+                return s_n
         return []

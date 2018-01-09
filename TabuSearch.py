@@ -39,16 +39,19 @@ class TabuSearch():
         s_best = s0
         while stop_cond:
             stop_cond-=1
-            s_cand = self.random_modification(s_best)
+            s_cand = self.random_modification()
+            print(s_cand)
             s_sub_cand = self.ts_sub(s_cand)
-            if(self.score(s_sub_cand)>self.score(s_best)):
+            if(self.score(s_sub_cand)<self.score(s_best)):
                 s_best=s_sub_cand
+                print(s_best)
                 stop_cond = self.mngi 
             
         return s_best
     
     def ts_sub(self, s0):
         s_best = s0
+        print(s_best)
         stop_cond = self.mnli
         tabu_list = []
         tabu_list.append(s0)
@@ -59,10 +62,11 @@ class TabuSearch():
                 continue
             s_cand = s_neighbors.pop()
             for neighbor in s_neighbors:
-                if (not neighbor in tabu_list and self.score(neighbor)>self.score(s_cand)):
+                if (not neighbor in tabu_list and self.score(neighbor)<self.score(s_cand)):
                     s_cand = neighbor
-            if(self.score(s_cand)>self.score(s_best)):
+            if(self.score(s_cand)<self.score(s_best)):
                 s_best=s_cand
+                print(s_best)
                 stop_cond = self.mnli
             tabu_list.append(s_cand)
             if(len(tabu_list) > self.mnli ):

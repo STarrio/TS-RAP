@@ -39,19 +39,20 @@ class TabuSearch():
         s_best = s0
         while stop_cond:
             stop_cond-=1
-            s_cand = self.random_modification()
+            s_cand = self.random_modification(s_best)
             print(s_cand)
             s_sub_cand = self.ts_sub(s_cand)
             if(self.score(s_sub_cand)<self.score(s_best)):
                 s_best=s_sub_cand
-                print(s_best)
+                print(s_best,self.address(s_best))
                 stop_cond = self.mngi 
             
         return s_best
     
     def ts_sub(self, s0):
         s_best = s0
-        print(s_best)
+        s_best_score = self.score(s_best)
+        #print(s_best)
         stop_cond = self.mnli
         tabu_list = []
         tabu_list.append(s0)
@@ -61,12 +62,14 @@ class TabuSearch():
             if(len(s_neighbors) == 0):
                 continue
             s_cand = s_neighbors.pop()
+            s_cand_score = self.score(s_cand)
             for neighbor in s_neighbors:
-                if (not neighbor in tabu_list and self.score(neighbor)<self.score(s_cand)):
+                if (not neighbor in tabu_list and self.score(neighbor)<s_cand_score):
                     s_cand = neighbor
-            if(self.score(s_cand)<self.score(s_best)):
+            if(s_cand_score<s_best_score):
                 s_best=s_cand
-                print(s_best)
+                s_best_score = s_cand_score
+                #print(s_best)
                 stop_cond = self.mnli
             tabu_list.append(s_cand)
             if(len(tabu_list) > self.mnli ):
@@ -99,35 +102,26 @@ class TabuSearch():
     
     def score(self, solution):
         # Devuelve el score de solution de acuerdo con la heuristica del articulo        
-        def extract_possible_m():
-            def rec(index):
-                if(index == self.s-1):                   
-                    return list(range(1, solution[index]+1))
-                else:
-                    return [ [x, c] if( type(c) is not list) else [x]+c for x in range(1, solution[index]+1) for c in rec(index+1) ]
-            return rec(0)        
-        
-        def m_performance(k_list):
-            return min(k_list[i]*ij_performance(solution[self.s:][i],i) for i in range(len(k_list)))
-        
-        def ij_performance(version,component):            
-            return self.W[component][version-1]        
+        def alpha(c, w_k):            
+            w_c = self.W[c][solution[self.s:][c]-1] #w_i_j
+            x = solution[c]
+            a = self.A[c][solution[self.s:][c]-1]
+            if w_k <= w_c:
+                return 1-(1-a)**x
+            else:
+                return next(( 1 - binom.pmf(k-1, x, a) for k in range(2, x+1)
+                              if (k-1)*w_c < w_k <= k*w_c), 0)
 
-        def delta_summ(k_interval,k_lists):
-            m_sort = sorted(k_lists,key=lambda k: m_performance(k))
-            return self.W_T[k_interval][1]*sum(delta(m) for m in m_sort if m_performance(m)>=self.W_T[k_interval][0])
-
-        def delta(m):
-            alpha = lambda k,x_i,a_ij: binom.pmf(k,x_i,a_ij)
-            return np.prod([alpha(m[c],solution[:self.s][c],self.A[c][solution[self.s:][c]-1]) for c in range(len(m))])                
+        def delta_summ(k, w_k):
+            return np.prod([ alpha(c, w_k) for c in range(self.s)])
         
         def availability():
-            possible_m = extract_possible_m()
             return ( (1/sum([ t_k for w_k, t_k in self.W_T ]))
                 *sum([
-                    delta_summ(k, possible_m)
-                    for k, _ in enumerate(self.W_T)
-                ]) )
+                    self.W_T[k][1]*delta_summ(k, w_k[0])
+                    for k, w_k in enumerate(self.W_T)
+                        ]))
+        
         def cost():            
             return sum(self.discount_func(c, solution[c])*solution[c] * self.C[c][j-1] for c, j in enumerate(solution[self.s:]))
         
@@ -140,5 +134,17 @@ class TabuSearch():
     def address(self, solution):
         return sum(solution)    
     
-    def random_modification(self):
-        return [random.randint(1,self.X_max[c]) for c in range(self.s)]+[random.randint(1,self.J_max[c]) for c in range(self.s)]
+    def random_modification(self,solution):
+        def is_valid(n, i):
+            return (n[i] in range(1, (self.X_max + self.J_max)[i]+1))
+        
+        I_n = list(range(2*(self.s)))
+        while len(I_n)>0:
+            s_n = solution.copy()
+            i_n = random.choice(I_n)
+            I_n.remove(i_n)
+            s_n[i_n]+=1
+            
+            if(is_valid(s_n,i_n)):
+               return s_n
+        return []

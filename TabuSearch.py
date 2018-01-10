@@ -47,7 +47,7 @@ class TabuSearch():
                 print(s_best,self.address(s_best), self.score(s_best))
                 stop_cond = self.mngi 
             else:
-                stop_cond -= self.mnli
+                stop_cond -= 1
         return s_best, self.score(s_best)
     
     def ts_sub(self, s0):
@@ -61,6 +61,9 @@ class TabuSearch():
         while stop_cond:
             stop_cond-=1  
             s_neighbors = self.neighborhood(s_cand, tabu_list)
+            if(s_best != self.generate_s0()):
+                s_neighbors = list(filter(lambda neighbor: np.mean([abs(x-y) for (x,y) in zip(neighbor,s_best)])<=1, s_neighbors)) 
+                #print(len(s_neighbors))
             if(len(s_neighbors) == 0):
                 continue
             s_cand = s_neighbors.pop()
